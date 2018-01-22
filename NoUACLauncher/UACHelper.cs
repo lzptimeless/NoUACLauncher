@@ -16,8 +16,8 @@ namespace NoUACLauncher
     /// </summary>
     public static class UACHelper
     {
-        private const string _uacRegistryKey = "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System";
-        private const string _uacRegistryValue = "EnableLUA";
+        private const string UACRegistryKey = "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System";
+        private const string UACRegistryValue = "EnableLUA";
 
         private static uint STANDARD_RIGHTS_READ = 0x00020000;
         private static uint TOKEN_QUERY = 0x0008;
@@ -81,12 +81,12 @@ namespace NoUACLauncher
         {
             CheckEnviroment();
 
-            using (RegistryKey uacKey = Registry.LocalMachine.OpenSubKey(_uacRegistryKey, false))
+            using (RegistryKey uacKey = Registry.LocalMachine.OpenSubKey(UACRegistryKey, false))
             {
                 if (uacKey == null)
-                    throw new KeyNotFoundException("Not found registry key: " + _uacRegistryKey);
+                    throw new KeyNotFoundException("Not found registry key: " + UACRegistryKey);
 
-                object uacValue = uacKey.GetValue(_uacRegistryValue);
+                object uacValue = uacKey.GetValue(UACRegistryValue);
                 if (uacValue == null)
                     return false;
 

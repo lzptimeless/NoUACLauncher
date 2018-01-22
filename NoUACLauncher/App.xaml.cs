@@ -18,20 +18,23 @@ namespace NoUACLauncher
     /// </summary>
     public partial class App : Application
     {
+        private const string RunAdminArgument = "-runas";
+        private const string RunSkipUACArgument = "-skipuac";
         private const UInt32 ERROR_USER_CANCELLED = 0x80004005;
         //private static string AppUniqueMutexName = "NoUACLauncher";
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            string launchPath = Assembly.GetEntryAssembly().Location;
             if (!UACHelper.IsProcessElevated())
             {
                 // Current process run without elevated
                 // Try to run new process through taskschedule
-                if (SkipUACHelper.IsSkipUACTaskExist())
+                if (SkipUACHelper.IsSkipUACTaskExist(launchPath))
                 {
                     try
                     {
-                        SkipUACHelper.RunSkipUACTask();
+                        SkipUACHelper.RunSkipUACTask(launchPath, RunSkipUACArgument);
                     }
                     catch (Exception ex)
                     {
@@ -43,6 +46,7 @@ namespace NoUACLauncher
                 {
                     ProcessStartInfo psi = new ProcessStartInfo();
                     psi.FileName = Assembly.GetEntryAssembly().Location;
+                    psi.Arguments = RunAdminArgument;
                     psi.Verb = "runas";
 
                     try
@@ -61,8 +65,16 @@ namespace NoUACLauncher
 
                 Shutdown();
             }
-
-            // Process run with elevated
+            else
+            {
+                // Process run with elevated
+                if (e.Args.Contains(RunAdminArgument))
+                    MessageBox.Show("Run admin");
+                else if (e.Args.Contains(RunSkipUACArgument))
+                    MessageBox.Show("Run skip uac");
+                else
+                    MessageBox.Show("Run elevated");
+            }
 
             base.OnStartup(e);
         }

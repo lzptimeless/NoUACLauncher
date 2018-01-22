@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -29,14 +30,18 @@ namespace NoUACLauncher
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            EnableSkipUAC.IsChecked = SkipUACHelper.IsSkipUACTaskExist();
+            string launcherPath = Assembly.GetEntryAssembly().Location;
+            EnableSkipUAC.IsChecked = SkipUACHelper.IsSkipUACTaskExist(launcherPath);
         }
 
         private void EnableSkipUAC_Checked(object sender, RoutedEventArgs e)
         {
+            string launcherPath = Assembly.GetEntryAssembly().Location;
+            if (SkipUACHelper.IsSkipUACTaskExist(launcherPath)) return;
+
             try
             {
-                SkipUACHelper.CreateSkipUACTask();
+                SkipUACHelper.CreateSkipUACTask(launcherPath);
             }
             catch (Exception ex)
             {
@@ -50,7 +55,7 @@ namespace NoUACLauncher
             {
                 SkipUACHelper.DeleteSkipUACTask();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show("Delete skip uac task failed.\r\n" + ex, "NoUACLauncher", MessageBoxButton.OK, MessageBoxImage.Error);
             }
