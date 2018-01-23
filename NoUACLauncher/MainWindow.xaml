@@ -7,8 +7,13 @@
         mc:Ignorable="d"
         Title="No UAC Launcher" Height="350" Width="525">
     <Grid>
-        <CheckBox x:Name="EnableSkipUAC" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10"
-                  Content="Enable Skip UAC"
-                  Checked="EnableSkipUAC_Checked" Unchecked="EnableSkipUAC_Unchecked"/>
+        <StackPanel>
+            <CheckBox x:Name="EnableSkipUAC" Margin="10"
+                      Content="Enable Skip UAC"
+                      Checked="EnableSkipUAC_Checked" Unchecked="EnableSkipUAC_Unchecked"/>
+            <CheckBox x:Name="EnableAutoStart" Margin="10,0,10,10"
+                      Content="Enable auto start after system boot"
+                      Checked="EnableAutoStart_Checked" Unchecked="EnableAutoStart_Unchecked"/>
+        </StackPanel>
     </Grid>
 </Window>

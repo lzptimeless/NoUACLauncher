@@ -32,6 +32,7 @@ namespace NoUACLauncher
         {
             string launcherPath = Assembly.GetEntryAssembly().Location;
             EnableSkipUAC.IsChecked = SkipUACHelper.IsSkipUACTaskExist(launcherPath);
+            EnableAutoStart.IsChecked = AutoStartHelper.IsAutoStartEnabled(launcherPath);
         }
 
         private void EnableSkipUAC_Checked(object sender, RoutedEventArgs e)
@@ -58,6 +59,31 @@ namespace NoUACLauncher
             catch (Exception ex)
             {
                 MessageBox.Show("Delete skip uac task failed.\r\n" + ex, "NoUACLauncher", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void EnableAutoStart_Checked(object sender, RoutedEventArgs e)
+        {
+            string launcherPath = Assembly.GetEntryAssembly().Location;
+            try
+            {
+                AutoStartHelper.EnableAutoStart(launcherPath, "-autostart");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Enable auto start failed.\r\n" + ex, "NoUACLauncher", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void EnableAutoStart_Unchecked(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                AutoStartHelper.DisableAutoStart();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Disable auto start failed.\r\n" + ex, "NoUACLauncher", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

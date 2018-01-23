@@ -20,6 +20,8 @@ namespace NoUACLauncher
     {
         private const string RunAdminArgument = "-runas";
         private const string RunSkipUACArgument = "-skipuac";
+        private const string RunAutoStart = "-autostart";
+        private const string RunSchedule = "-schedule";
         private const UInt32 ERROR_USER_CANCELLED = 0x80004005;
         //private static string AppUniqueMutexName = "NoUACLauncher";
 
