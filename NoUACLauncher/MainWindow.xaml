@@ -11,9 +11,31 @@
             <CheckBox x:Name="EnableSkipUAC" Margin="10"
                       Content="Enable Skip UAC"
                       Checked="EnableSkipUAC_Checked" Unchecked="EnableSkipUAC_Unchecked"/>
-            <CheckBox x:Name="EnableAutoStart" Margin="10,0,10,10"
+            <CheckBox x:Name="EnableAutoStart" Margin="10,0,10,30"
                       Content="Enable auto start after system boot"
                       Checked="EnableAutoStart_Checked" Unchecked="EnableAutoStart_Unchecked"/>
+            <GroupBox Header="Launch program with non-elevated">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="40"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Launch path:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    <TextBlock Text="Arguments:" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    <TextBlock Text="Working Directory:" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    <TextBox x:Name="LaunchPath" Grid.Column="1" Height="25" Width="300" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0" Padding="4,0,0,0" VerticalContentAlignment="Center"/>
+                    <TextBox x:Name="LaunchArguments" Grid.Row="1" Grid.Column="1" Height="25" Width="300" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0" Padding="4,0,0,0" VerticalContentAlignment="Center"/>
+                    <TextBox x:Name="LaunchWorkingDirectory" Grid.Row="2" Grid.Column="1" Height="25" Width="300" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0" Padding="4,0,0,0" VerticalContentAlignment="Center"/>
+                    <Button x:Name="Launch" Content="Launch" Grid.Row="3" Grid.ColumnSpan="2" Width="100" Height="25" VerticalAlignment="Bottom"
+                            Click="Launch_Click"/>
+                </Grid>
+            </GroupBox>
         </StackPanel>
     </Grid>
 </Window>

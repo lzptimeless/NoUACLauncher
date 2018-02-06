@@ -23,19 +23,30 @@ namespace NoUACLauncher
         private static uint TOKEN_QUERY = 0x0008;
         private static uint TOKEN_READ = (STANDARD_RIGHTS_READ | TOKEN_QUERY);
 
+        /// <summary>
+        /// 这里返回的Handle是一个伪Handle（常量），用以指代当前进程，不需要释放
+        /// The Handle returned is a pseudo Handle(constant), use to indicate a process, no need to release
+        /// </summary>
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr GetCurrentProcess();
+
+        /// <summary>
+        /// TokenHandle需要通过CloseHandle释放
+        /// TokenHandle need release through CloseHandle
+        /// </summary>
         [DllImport("advapi32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool OpenProcessToken(IntPtr ProcessHandle, UInt32 DesiredAccess, out IntPtr TokenHandle);
+        private static extern bool OpenProcessToken(IntPtr ProcessHandle, UInt32 DesiredAccess, out IntPtr TokenHandle);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool CloseHandle(IntPtr hObject);
+        private static extern bool CloseHandle(IntPtr hObject);
 
         [DllImport("advapi32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool GetTokenInformation(IntPtr TokenHandle, TOKEN_INFORMATION_CLASS TokenInformationClass, IntPtr TokenInformation, UInt32 TokenInformationLength, out UInt32 ReturnLength);
+        private static extern bool GetTokenInformation(IntPtr TokenHandle, TOKEN_INFORMATION_CLASS TokenInformationClass, IntPtr TokenInformation, UInt32 TokenInformationLength, out UInt32 ReturnLength);
 
-        public enum TOKEN_INFORMATION_CLASS
+        private enum TOKEN_INFORMATION_CLASS
         {
             TokenUser = 1,
             TokenGroups,
@@ -68,7 +79,7 @@ namespace NoUACLauncher
             MaxTokenInfoClass
         }
 
-        public enum TOKEN_ELEVATION_TYPE
+        private enum TOKEN_ELEVATION_TYPE
         {
             TokenElevationTypeDefault = 1,
             TokenElevationTypeFull,
@@ -100,37 +111,51 @@ namespace NoUACLauncher
 
             if (IsUACEnabled())
             {
-                IntPtr tokenHandle;
-                if (!OpenProcessToken(Process.GetCurrentProcess().Handle, TOKEN_READ, out tokenHandle))
+                IntPtr tokenHandle = IntPtr.Zero;
+                IntPtr elevationTypePtr = IntPtr.Zero;
+                Int32 win32Err;
+                try
                 {
-                    throw new ApplicationException("Could not get process token.  Win32 Error Code: " + Marshal.GetLastWin32Error());
+                    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_READ, out tokenHandle))
+                    {
+                        win32Err = Marshal.GetLastWin32Error();
+                        throw new ApplicationException("Could not get process token.  Win32 Error Code: " + win32Err.ToString("X"));
+                    }
+
+                    TOKEN_ELEVATION_TYPE elevationResult = TOKEN_ELEVATION_TYPE.TokenElevationTypeDefault;
+
+                    int elevationResultSize = Marshal.SizeOf(Enum.GetUnderlyingType(typeof(TOKEN_ELEVATION_TYPE)));
+                    uint returnedSize = 0;
+                    elevationTypePtr = Marshal.AllocHGlobal(elevationResultSize);
+
+                    bool success = GetTokenInformation(tokenHandle, TOKEN_INFORMATION_CLASS.TokenElevationType, elevationTypePtr, (uint)elevationResultSize, out returnedSize);
+                    if (success)
+                    {
+                        elevationResult = (TOKEN_ELEVATION_TYPE)Marshal.ReadInt32(elevationTypePtr);
+                        bool isProcessElevated = elevationResult == TOKEN_ELEVATION_TYPE.TokenElevationTypeFull;
+                        return isProcessElevated;
+                    }
+                    else
+                    {
+                        win32Err = Marshal.GetLastWin32Error();
+                        throw new ApplicationException("Unable to determine the current elevation: " + win32Err.ToString("X"));
+                    }
                 }
-
-                TOKEN_ELEVATION_TYPE elevationResult = TOKEN_ELEVATION_TYPE.TokenElevationTypeDefault;
-
-                int elevationResultSize = Marshal.SizeOf(Enum.GetUnderlyingType(typeof(TOKEN_ELEVATION_TYPE)));
-                uint returnedSize = 0;
-                IntPtr elevationTypePtr = Marshal.AllocHGlobal(elevationResultSize);
-
-                bool success = GetTokenInformation(tokenHandle, TOKEN_INFORMATION_CLASS.TokenElevationType, elevationTypePtr, (uint)elevationResultSize, out returnedSize);
-                if (success)
+                finally
                 {
-                    elevationResult = (TOKEN_ELEVATION_TYPE)Marshal.ReadInt32(elevationTypePtr);
-                    bool isProcessElevated = elevationResult == TOKEN_ELEVATION_TYPE.TokenElevationTypeFull;
-                    return isProcessElevated;
-                }
-                else
-                {
-                    throw new ApplicationException("Unable to determine the current elevation.");
+                    if (tokenHandle != IntPtr.Zero) CloseHandle(tokenHandle);
+                    if (elevationTypePtr != IntPtr.Zero) Marshal.FreeHGlobal(elevationTypePtr);
                 }
             }
             else
             {
-                WindowsIdentity identity = WindowsIdentity.GetCurrent();
-                WindowsPrincipal principal = new WindowsPrincipal(identity);
-                bool result = principal.IsInRole(WindowsBuiltInRole.Administrator)
-                           || principal.IsInRole(0x200); //Domain Administrator
-                return result;
+                using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
+                {
+                    WindowsPrincipal principal = new WindowsPrincipal(identity);
+                    bool result = principal.IsInRole(WindowsBuiltInRole.Administrator)
+                               || principal.IsInRole(0x200); //Domain Administrator
+                    return result;
+                }
             }
         }
 

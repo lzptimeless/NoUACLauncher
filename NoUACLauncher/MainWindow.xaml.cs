@@ -26,6 +26,7 @@ namespace NoUACLauncher
             InitializeComponent();
 
             Loaded += MainWindow_Loaded;
+            Title = Title + " - " + (Application.Current as App).StartMode;
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -84,6 +85,18 @@ namespace NoUACLauncher
             catch (Exception ex)
             {
                 MessageBox.Show("Disable auto start failed.\r\n" + ex, "NoUACLauncher", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void Launch_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                NonElevatedLaunchHelper.Launch(LaunchPath.Text.Trim(), LaunchArguments.Text.Trim(), LaunchWorkingDirectory.Text.Trim());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Launch program failed.\r\n" + ex, "NoUACLauncher", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

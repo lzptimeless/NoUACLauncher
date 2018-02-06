@@ -25,6 +25,8 @@ namespace NoUACLauncher
         private const UInt32 ERROR_USER_CANCELLED = 0x80004005;
         //private static string AppUniqueMutexName = "NoUACLauncher";
 
+        public string StartMode { get; private set; }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             string launchPath = Assembly.GetEntryAssembly().Location;
@@ -71,11 +73,11 @@ namespace NoUACLauncher
             {
                 // Process run with elevated
                 if (e.Args.Contains(RunAdminArgument))
-                    MessageBox.Show("Run admin");
+                    StartMode = "Run admin";
                 else if (e.Args.Contains(RunSkipUACArgument))
-                    MessageBox.Show("Run skip uac");
+                    StartMode = "Run skip uac";
                 else
-                    MessageBox.Show("Run elevated");
+                    StartMode = "Run elevated";
             }
 
             base.OnStartup(e);
