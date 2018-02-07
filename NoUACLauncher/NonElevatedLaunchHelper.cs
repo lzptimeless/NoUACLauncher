@@ -198,7 +198,7 @@ namespace NoUACLauncher
         private static extern bool DuplicateTokenEx(IntPtr hExistingToken, UInt32 dwDesiredAccess, IntPtr lpTokenAttributes,
             SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, TOKEN_TYPE TokenType, ref IntPtr phNewToken);
 
-        private static bool LaunchWithShellToken(string launchPath, string cmd, string workingDir)
+        private static void LaunchWithShellToken(string launchPath, string cmd, string workingDir)
         {
             IntPtr hShellProcess = IntPtr.Zero, hShellProcessToken = IntPtr.Zero, hPrimaryToken = IntPtr.Zero;
             IntPtr hProcessToken = IntPtr.Zero;
@@ -212,10 +212,6 @@ namespace NoUACLauncher
             UInt32 dwPID = 0;
             bool ret;
             Int32 dwLastErr;
-
-            // 本函数的返回值
-            // The return value of this function
-            bool retval = false;
 
             try
             {
@@ -294,8 +290,6 @@ namespace NoUACLauncher
                     dwLastErr = Marshal.GetLastWin32Error();
                     throw new ApplicationException("CreateProcessWithTokenW failed: 0x" + dwLastErr.ToString("X"));
                 }
-
-                retval = true;
             }
             finally
             {
@@ -309,43 +303,63 @@ namespace NoUACLauncher
                 if (pi.hThread != IntPtr.Zero) CloseHandle(pi.hThread);
                 if (pi.hProcess != IntPtr.Zero) CloseHandle(pi.hProcess);
             }
-
-            return retval;
         }
 
-        public static bool Launch(string launchPath, string cmd, string workingDir)
+        public static void Launch(string launchPath, string cmd, string workingDir)
+        {
+            if (launchPath.Contains("://"))
+                LaunchUrl(launchPath);
+            else
+                LaunchLocal(launchPath, cmd, workingDir);
+        }
+
+        public static void LaunchLocal(string launchPath, string cmd, string workingDir)
         {
             if (string.IsNullOrWhiteSpace(launchPath))
                 throw new ArgumentException("launchPath can not be null or empty");
 
-            string fullLaunchPath = launchPath;
-            try
-            {
-                fullLaunchPath = Path.GetFullPath(launchPath);
-            }
-            catch { }
+            launchPath = Path.GetFullPath(launchPath.Trim());
 
             if (string.IsNullOrWhiteSpace(cmd))
-                cmd = $"\"{fullLaunchPath}\"";
+                cmd = $"\"{launchPath}\"";
             else
-                cmd = $"\"{fullLaunchPath}\" {cmd.Trim()}";
+                cmd = $"\"{launchPath}\" {cmd.Trim()}";
 
             if (string.IsNullOrWhiteSpace(workingDir))
                 workingDir = null;
             else
-                workingDir = Path.GetFullPath(workingDir);
+                workingDir = Path.GetFullPath(workingDir.Trim());
 
             if (!UACHelper.IsProcessElevated())
             {
-                ProcessStartInfo psi = new ProcessStartInfo(fullLaunchPath, cmd);
+                ProcessStartInfo psi = new ProcessStartInfo(launchPath, cmd);
                 psi.WorkingDirectory = workingDir;
                 var p = Process.Start(psi);
-
-                return p != null;
+                if (p != null) p.Dispose();
             }
+            else
+                LaunchWithShellToken(launchPath, cmd, workingDir);
+        }
 
-            bool retval = LaunchWithShellToken(fullLaunchPath, cmd, workingDir);
-            return retval;
+        public static void LaunchUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException("url can not be null or empty");
+
+            url = url.Trim();
+
+            if (!UACHelper.IsProcessElevated())
+            {
+                ProcessStartInfo psi = new ProcessStartInfo(url);
+                var p = Process.Start(psi);
+                if (p != null) p.Dispose();
+            }
+            else
+            {
+                string explorerPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
+                string cmd = $"\"{explorerPath}\" {url}";
+                LaunchWithShellToken(explorerPath, cmd, null);
+            }
         }
     }
 }

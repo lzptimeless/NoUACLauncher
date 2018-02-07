@@ -68,6 +68,7 @@ namespace NoUACLauncher
                 }
 
                 Shutdown();
+                return;
             }
             else
             {
