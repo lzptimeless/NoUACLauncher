@@ -34,7 +34,7 @@ namespace NoUACLauncher
          *   -ExecutionTimeLimit = TimeSpan.Zero 必须
          *   -AllowDemandStart = true 必须
          *   -AllowHardTerminate = false 不改也应该没问题，改了更保险
-         * 3.计划任务的设置可能被其他程序或用户修改，至少要确保启动路径正确
+         * 3.计划任务的设置可能被其他程序或用户修改，需要验证启动路径是否是本程序
          */
 
         private const string SkipUACTaskNameBase = "NoUACLauncherSkipUAC";

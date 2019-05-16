@@ -51,7 +51,7 @@ namespace NoUACLauncher
                     ProcessStartInfo psi = new ProcessStartInfo();
                     psi.FileName = Assembly.GetEntryAssembly().Location;
                     psi.Arguments = RunAdminArgument;
-                    psi.Verb = "runas";
+                    psi.Verb = "runas"; // runas代表要向用户请求admin权限
 
                     try
                     {
@@ -74,11 +74,11 @@ namespace NoUACLauncher
             {
                 // Process run with elevated
                 if (e.Args.Contains(RunAdminArgument))
-                    StartMode = "Run admin";
+                    StartMode = "Run admin"; // 通过向用户请求获得admin权限启动
                 else if (e.Args.Contains(RunSkipUACArgument))
-                    StartMode = "Run skip uac";
+                    StartMode = "Run skip uac"; // 通过计划任务获得admin权限启动
                 else
-                    StartMode = "Run elevated";
+                    StartMode = "Run elevated"; // 程序被用户或其他程序以admin权限启动
             }
 
             base.OnStartup(e);
